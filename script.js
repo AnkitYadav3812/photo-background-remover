@@ -1,5 +1,5 @@
 // Placeholder for the Remove.bg API key (replace with your actual key from https://www.remove.bg/api)
-const apiKey = "YOUR_API_KEY";
+const apiKey = "yqcE1qBM2nQQktL9gLiR6HgZ";
 
 // Get references to HTML elements
 const imageUpload = document.getElementById('image-upload');
@@ -72,3 +72,4 @@ function processImage(file) {
         loading.style.display = 'none'; // Hide loading indicator
     });
 }
+
