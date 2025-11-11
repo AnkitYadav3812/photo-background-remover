@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartAI Object Remover</title>
+<link rel="icon" href="favicon.png" />
+<style>
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:"Poppins",sans-serif;
+    background:linear-gradient(145deg,#eef1f6,#ffffff);
+    color:#222;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-height:100vh;
+  }
+  header{
+    font-size:2rem;
+    font-weight:700;
+    margin:25px 0 10px;
+    color:#3b82f6;
+    text-shadow:0 0 8px rgba(59,130,246,.2);
+  }
+  .editor{
+    width:95%;
+    max-width:850px;
+    background:rgba(255,255,255,0.8);
+    backdrop-filter:blur(15px);
+    border-radius:20px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.1);
+    padding:25px;
+    text-align:center;
+  }
+  .upload-box{
+    border:2px dashed #a5b4fc;
+    border-radius:15px;
+    padding:40px;
+    transition:.3s;
+    cursor:pointer;
+    color:#555;
+  }
+  .upload-box:hover{
+    background:#f0f5ff;
+  }
+  canvas{
+    margin-top:20px;
+    max-width:100%;
+    border-radius:10px;
+    border:1px solid #ddd;
+    cursor:crosshair;
+  }
+  .controls{
+    margin-top:20px;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:15px;
+  }
+  button{
+    background:#3b82f6;
+    color:#fff;
+    border:none;
+    border-radius:25px;
+    padding:12px 28px;
+    font-size:1rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:.25s;
+  }
+  button:hover{background:#2563eb;transform:translateY(-2px)}
+  footer{
+    margin:40px 0 20px;
+    color:#777;
+    font-size:.9rem;
+  }
+  @media(max-width:600px){
+    header{font-size:1.6rem}
+    button{padding:10px 22px;font-size:.9rem}
+  }
+</style>
+</head>
+<body>
+<header>⚡ SmartAI Object Remover</header>
+
+<div class="editor">
+  <div class="upload-box" id="uploadBox">
+    <input type="file" id="imageInput" accept="image/*" />
+    <p>📤 Click or drag an image here to start editing</p>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <div class="controls">
+    <button id="removeBtn">🪄 Remove Object</button>
+    <button id="clearBtn">🧹 Clear Marks</button>
+    <button id="downloadBtn" style="display:none;">⬇️ Download Result</button>
+  </div>
+</div>
+
+<footer>© 2025 SmartAI Object Remover • Modern Photo Editor</footer>
+
+<script>
+const uploadBox=document.getElementById("uploadBox");
+const imageInput=document.getElementById("imageInput");
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+const removeBtn=document.getElementById("removeBtn");
+const clearBtn=document.getElementById("clearBtn");
+const downloadBtn=document.getElementById("downloadBtn");
+
+let image=new Image();
+let drawing=false;
+
+// ---------- Upload handling ----------
+uploadBox.addEventListener("click",()=>imageInput.click());
+uploadBox.addEventListener("dragover",e=>{
+  e.preventDefault();uploadBox.style.background="#f0f5ff";
+});
+uploadBox.addEventListener("dragleave",e=>{
+  e.preventDefault();uploadBox.style.background="transparent";
+});
+uploadBox.addEventListener("drop",e=>{
+  e.preventDefault();uploadBox.style.background="transparent";
+  const file=e.dataTransfer.files[0];
+  if(file)handleUpload({target:{files:[file]}});
+});
+imageInput.addEventListener("change",handleUpload);
+
+function handleUpload(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    image.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+image.onload=()=>{
+  canvas.width=image.width;
+  canvas.height=image.height;
+  ctx.drawImage(image,0,0);
+};
+
+// ---------- Brush drawing ----------
+canvas.addEventListener("mousedown",()=>{drawing=true;});
+canvas.addEventListener("mouseup",()=>{drawing=false;ctx.beginPath();});
+canvas.addEventListener("mousemove",e=>{
+  if(!drawing)return;
+  const rect=canvas.getBoundingClientRect();
+  const x=(e.clientX||e.touches?.[0]?.clientX)-rect.left;
+  const y=(e.clientY||e.touches?.[0]?.clientY)-rect.top;
+  ctx.lineWidth=30;
+  ctx.lineCap="round";
+  ctx.strokeStyle="rgba(255,0,0,0.5)";
+  ctx.lineTo(x,y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+});
+
+// ---------- Buttons ----------
+clearBtn.onclick=()=>ctx.drawImage(image,0,0);
+
+removeBtn.onclick=async()=>{
+  alert("🧠 This is where the Hugging Face AI call goes.\n\nSee comments in code for details.");
+  /* 
+  -------------------------------------------------
+  To enable AI removal locally:
+
+  const hfToken = "YOUR_HUGGINGFACE_TOKEN";
+  const endpoint = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-inpainting";
+
+  const blob = await new Promise(r=>canvas.toBlob(r,"image/png"));
+  const formData = new FormData();
+  formData.append("image", blob, "image.png");
+
+  const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${hfToken}` },
+      body: formData
+  });
+  const resultBlob = await response.blob();
+  output = URL.createObjectURL(resultBlob);
+  // display result image or replace canvas
+  -------------------------------------------------
+  */
+};
+
+downloadBtn.onclick=()=>{
+  const link=document.createElement("a");
+  link.href=canvas.toDataURL("image/png");
+  link.download="SmartAI_Removed.png";
+  link.click();
+};
+</script>
+</body>
+</html>
+
