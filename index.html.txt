@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartAI Photo Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 500% 500%;
+            animation: gradientShift 20s ease infinite;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            25% { background-position: 100% 50%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+            100% { background-position: 0% 50%; }
+        }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 1.2s ease-out;
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 6px 12px rgba(0,0,0,0.4);
+            letter-spacing: 2px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        header h1 .logo {
+            font-size: 4rem;
+            color: #fff;
+            text-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+        header h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        .container {
+            display: flex;
+            max-width: 1200px;
+            width: 100%;
+            gap: 30px;
+            animation: fadeInUp 1.2s ease-out 0.3s both;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(25px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .sidebar h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .sidebar .tool-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .sidebar button {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 12px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            text-align: left;
+        }
+        .sidebar button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        .sidebar button:hover::before {
+            left: 100%;
+        }
+        .sidebar button:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .sidebar button:active {
+            transform: translateY(0);
+        }
+        .sidebar button.active {
+            background: rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .sidebar button i {
+            margin-right: 10px;
+        }
+        .editor-area {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(25px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .upload-section {
+            width: 100%;
+            text-align: center;
+            padding: 40px;
+            border: 2px dashed rgba(102, 126, 234, 0.5);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transition: left 0.5s;
+        }
+        .upload-section:hover::before {
+            left: 100%;
+        }
+        .upload-section:hover {
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.02);
+        }
+        .upload-section p {
+            font-size: 1.5rem;
+            color: #555;
+            font-weight: 500;
+            z-index: 1;
+            position: relative;
+        }
+        .upload-section span {
+            display: block;
+            font-size: 1.1rem;
+            color: #777;
+            margin-top: 10px;
+        }
+        .upload-section i {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        #fileInput {
+            display: none;
+        }
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+        }
+        #canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            cursor: crosshair;
+            transition: box-shadow 0.3s ease;
+        }
+        #canvas:hover {
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        .toolbar {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+        .toolbar button {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .toolbar button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        .toolbar button:hover::before {
+            left: 100%;
+        }
+        .toolbar button:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .toolbar button:active {
+            transform: translateY(-1px);
+        }
+        .toolbar button.active {
+            background: rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+        .result {
+            width: 100%;
+            text-align: center;
+            position: relative;
+        }
+        #resultImg {
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: none;
+            transition: opacity 0.5s ease;
+        }
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.3rem;
+            color: #667eea;
+            font-weight: 500;
+            z-index: 10;
+        }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 140px;
+            background-color: rgba(0,0,0,0.9);
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -70px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #fff;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .sidebar .tool-group {
+                flex: 1;
+                min-width: 200px;
+            }
+        }
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2.5rem;
+            }
+            header h1 .logo {
+                font-size: 3rem;
+            }
+            .editor-area {
+                padding: 20px;
+                gap: 20px;
+            }
+            .upload-section {
+                padding: 30px;
+            }
+            .upload-section p {
+                font-size: 1.3rem;
+            }
+            .toolbar {
+                flex-direction: column;
+                align-items: center;
+            }
+            .toolbar button {
+                width: 100%;
+                max-width: 250px;
+                padding: 15px 20px;
+            }
+        }
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 2rem;
+            }
+            header h1 .logo {
+                font-size: 2.5rem;
+            }
+            .editor-area {
+                padding: 15px;
+            }
+            .upload-section p {
+                font-size: 1.1rem;
+            }
+            .sidebar {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-camera logo"></i> SmartAI Photo Editor</h1>
+    </header>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="tool-group">
+                <h3><i class="fas fa-tools"></i> Tools</h3>
+                <button id="removeBgBtn"><i class="fas fa-magic"></i> Remove Background</button>
+                <button id="removeObjBtn"><i class="fas fa-crosshairs"></i> Mark Object</button>
+                <button id="applyRemoveBtn"><i class="fas fa-robot"></i> Apply AI Removal</button>
+                <button id="clearBtn"><i class="fas fa-eraser"></i> Clear Marks</button>
+                <button id="downloadBtn"><i class="fas fa-download"></i> Download Result</button>
+            </div>
+        </aside>
+        <main class="editor-area">
+            <label class="upload-section" id="uploadSection" for="fileInput">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Click or drag an image to upload</p>
+                <span>Supported formats: JPG, PNG, GIF</span>
+                <input type="file" id="fileInput" accept="image/*">
+            </label>
+            <div class="canvas-container">
+                <canvas id="canvas"></canvas>
+            </div>
+            <div class="toolbar">
+                <div class="tooltip">
+                    <button id="zoomInBtn"><i class="fas fa-search-plus"></i> Zoom In</button>
+                    <span class="tooltiptext">Increase canvas zoom</span>
+                </div>
+                <div class="tooltip">
+                    <button id="zoomOutBtn"><i class="fas fa-search-minus"></i> Zoom Out</button>
+                    <span class="tooltiptext">Decrease canvas zoom</span>
+                </div>
+                <div class="tooltip">
+                    <button id="resetZoomBtn"><i class="fas fa-expand"></i> Reset Zoom</button>
+                    <span class="tooltiptext">Reset to original zoom</span>
+                </div>
+            </div>
+            <div class="result">
+                <div class="loading" id="loading">Processing...</div>
+                <img id="resultImg" alt="AI Result">
+            </div>
+        </main>
+    </div>
+    <footer>
+        <p>&copy; 2023 SmartAI Photo Editor. Powered by AI.</p>
+    </footer>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const removeBgBtn = document.getElementById('removeBgBtn');
+        const removeObjBtn = document.getElementById('removeObjBtn');
+        const applyRemoveBtn = document.getElementById('applyRemoveBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const zoomInBtn = document.getElementById('zoomInBtn');
+        const zoomOutBtn = document.getElementById('zoomOutBtn');
+        const resetZoomBtn = document.getElementById('resetZoomBtn');
+        const resultImg = document.getElementById('resultImg');
+        const loading = document.getElementById('loading');
+
+        let img = null;
+        let originalImg = null;
+        let brushMode = false;
+        let isDrawing = false;
+        let scale = 1;
+        let originX = 0;
+        let originY = 0;
+        let maskCanvas = document.createElement('canvas');
+        let maskCtx = maskCanvas.getContext('2d');
+
+        // Upload handling
+        fileInput.addEventListener('change', handleFile);
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.style.borderColor = '#667eea';
+            uploadSection.style.transform = 'scale(1.02)';
+        });
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.style.borderColor = 'rgba(102, 126, 234, 0.5)';
+            uploadSection.style.transform = 'scale(1)';
+        });
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.style.borderColor = 'rgba(102, 126, 234, 0.5)';
+            uploadSection.style.transform = 'scale(
