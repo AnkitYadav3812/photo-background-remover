@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartAI Object Remover</title>
+  <link rel="icon" href="favicon.png" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at top left, #1a1033, #281b5e, #3b82f6);
+      background-size: 300% 300%;
+      animation: bgmove 8s ease infinite;
+      color: #fff;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    @keyframes bgmove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    header {
+      font-size: 2.5rem;
+      margin: 20px 0;
+      font-weight: 700;
+      background: linear-gradient(90deg, #06b6d4, #9333ea);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 20px rgba(255,255,255,0.3);
+      text-align: center;
+    }
+    .editor-container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+      width: 90%;
+      max-width: 800px;
+      text-align: center;
+    }
+    .upload-area {
+      border: 2px dashed rgba(255, 255, 255, 0.4);
+      border-radius: 15px;
+      padding: 40px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .upload-area:hover {
+      background: rgba(255,255,255,0.15);
+      box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    }
+    canvas {
+      margin-top: 20px;
+      max-width: 100%;
+      border-radius: 10px;
+      cursor: crosshair;
+    }
+    #buttons {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+    }
+    button {
+      background: linear-gradient(90deg, #06b6d4, #9333ea);
+      border: none;
+      border-radius: 25px;
+      padding: 12px 25px;
+      font-size: 1rem;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 15px rgba(255,255,255,0.3);
+    }
+    #result {
+      display: none;
+      margin-top: 30px;
+      position: relative;
+      width: 100%;
+    }
+    #result img {
+      width: 100%;
+      border-radius: 15px;
+    }
+    footer {
+      margin: 30px 0;
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+    @media(max-width:600px) {
+      header { font-size: 1.8rem; }
+      button { padding: 10px 20px; font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>⚡ SmartAI Object Remover</header>
+
+  <div class="editor-container">
+    <div class="upload-area" id="upload-area">
+      <input type="file" id="imageInput" accept="image/*" style="display:none;">
+      <p>📤 Click or drag an image to start editing</p>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <div id="buttons">
+      <button id="removeBtn">🪄 Remove Object</button>
+      <button id="clearBtn">🧹 Clear Marks</button>
+      <button id="downloadBtn" style="display:none;">⬇️ Download Result</button>
+    </div>
+
+    <div id="result">
+      <img id="outputImage" alt="Processed Result" />
+    </div>
+  </div>
+
+  <footer>© 2025 SmartAI Object Remover • Free AI Photo Editor</footer>
+
+  <script>
+    const hfToken = "YOUR_HUGGINGFACE_TOKEN"; // Replace with your own token for local testing
+    const uploadArea = document.getElementById('upload-area');
+    const imageInput = document.getElementById('imageInput');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const removeBtn = document.getElementById('removeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const outputImage = document.getElementById('outputImage');
+    let image = new Image();
+    let isDrawing = false;
+
+    // --- Upload handling (click + drag-drop) ---
+    uploadArea.addEventListener('click', () => imageInput.click());
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.style.background = 'rgba(255,255,255,0.2)';
+    });
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.style.background = 'transparent';
+    });
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.style.background = 'transparent';
+      const file = e.dataTransfer.files[0];
+      handleImageUpload({ target: { files: [file] } });
+    });
+    imageInput.addEventListener('change', handleImageUpload);
+
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        image.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    image.onload = function() {
+      canvas.width = image.width;
+      canvas.height = image.height;
+      ctx.drawImage(image, 0, 0);
+    };
+
+    // --- Drawing mask ---
+    canvas.addEventListener('mousedown', () => { isDrawing = true; });
+    canvas.addEventListener('mouseup', () => { isDrawing = false; ctx.beginPath(); });
+    canvas.addEventListener('mousemove', draw);
+    function draw(e) {
+      if (!isDrawing) return;
+      ctx.lineWidth = 30;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "rgba(255, 0, 0, 0.6)";
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    clearBtn.onclick = () => {
+      ctx.drawImage(image, 0, 0);
+    };
+
+    // --- Placeholder for AI processing ---
+    removeBtn.onclick = async () => {
+      alert("🧠 AI remove function placeholder.\nPaste your Hugging Face API logic here when testing locally!");
+    };
+
+    downloadBtn.onclick = () => {
+      const link = document.createElement('a');
+      link.href = outputImage.src;
+      link.download = "SmartAI_Removed.png";
+      link.click();
+    };
+  </script>
+</body>
+</html>
