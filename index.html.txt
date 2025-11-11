@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartBG Remover</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1e1b4b, #312e81, #3b82f6);
+      background-size: 300% 300%;
+      animation: gradientMove 10s ease infinite;
+      color: #fff;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    header {
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-top: 30px;
+      background: linear-gradient(90deg, #06b6d4, #9333ea);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
+      text-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+    }
+
+    .container {
+      margin-top: 40px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 25px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+      backdrop-filter: blur(15px);
+      padding: 60px 40px;
+      text-align: center;
+      max-width: 700px;
+      width: 90%;
+      animation: fadeInUp 1s ease;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .upload-box {
+      border: 2px dashed rgba(255,255,255,0.4);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.1);
+      padding: 60px 30px;
+      cursor: pointer;
+      transition: 0.4s;
+    }
+
+    .upload-box:hover {
+      background: rgba(255,255,255,0.2);
+      transform: scale(1.03);
+      box-shadow: 0 0 30px rgba(255,255,255,0.4);
+    }
+
+    .upload-label {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .upload-box input { display: none; }
+
+    #preview-section {
+      display: none;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+      margin-top: 40px;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .image-box {
+      background: rgba(255,255,255,0.15);
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      padding: 20px;
+      width: 280px;
+      transition: all 0.3s ease;
+    }
+
+    .image-box:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 30px rgba(255,255,255,0.3);
+    }
+
+    .image-box img {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+
+    #download-btn {
+      display: none;
+      margin-top: 30px;
+      background: linear-gradient(90deg, #06b6d4, #3b82f6, #9333ea);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 15px 50px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      transition: 0.3s ease;
+    }
+
+    #download-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(255,255,255,0.4);
+    }
+
+    footer {
+      margin-top: 60px;
+      padding: 20px;
+      font-size: 0.9rem;
+      background: rgba(255,255,255,0.1);
+      border-top: 1px solid rgba(255,255,255,0.2);
+      width: 100%;
+      text-align: center;
+      color: #ddd;
+    }
+
+    footer a {
+      color: #06b6d4;
+      text-decoration: none;
+      margin: 0 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>⚡ SmartBG Remover</header>
+
+  <div class="container">
+    <div class="upload-box">
+      <label for="image-upload" class="upload-label">
+        📤 Click or Drag an Image to Remove Background Instantly
+      </label>
+      <input type="file" id="image-upload" accept="image/*">
+    </div>
+
+    <div id="preview-section">
+      <div class="image-box">
+        <h4>Original</h4>
+        <img id="original-image" src="" alt="Original Image">
+      </div>
+      <div class="image-box">
+        <h4>Background Removed</h4>
+        <img id="processed-image" src="" alt="Processed Image">
+      </div>
+    </div>
+
+    <button id="download-btn">⬇️ Download Image</button>
+  </div>
+
+  <footer>
+    <p>© 2025 SmartBG Remover • Sleek • Modern • Fast</p>
+  </footer>
+
+  <script>
+    const apiKey = "YOUR_API_KEY_HERE";
+
+    const imageUpload = document.getElementById('image-upload');
+    const originalImage = document.getElementById('original-image');
+    const processedImage = document.getElementById('processed-image');
+    const previewSection = document.getElementById('preview-section');
+    const downloadBtn = document.getElementById('download-btn');
+
+    imageUpload.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          originalImage.src = e.target.result;
+          previewSection.style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+        processImage(file);
+      }
+    });
+
+    function processImage(file) {
+      const formData = new FormData();
+      formData.append('image_file', file);
+      formData.append('size', 'auto');
+
+      fetch('https://api.remove.bg/v1.0/removebg', {
+        method: 'POST',
+        headers: { 'X-Api-Key': apiKey },
+        body: formData,
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('API error: ' + response.status);
+        return response.blob();
+      })
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        processedImage.src = url;
+        downloadBtn.style.display = 'inline-block';
+        downloadBtn.onclick = () => {
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'SmartBG_Removed.png';
+          link.click();
+        };
+      })
+      .catch(() => {
+        alert('⚠️ Error processing image. Please check your API key or try another image.');
+      });
+    }
+  </script>
+</body>
+</html>
